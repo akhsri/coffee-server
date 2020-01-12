@@ -40,7 +40,8 @@ mongoose.connect(dbConfig.url, {
 // Require Beverages routes
 require('./app/routes/beverage.routes.js')(app);
 
-// ........
+// Require Users routes
+require('./app/routes/user.routes.js')(app);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 

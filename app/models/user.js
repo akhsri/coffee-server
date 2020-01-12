@@ -19,18 +19,34 @@ const userSchema = mongoose.Schema({
         unique: true,
         match: new RegExp("^[\w\.=-]+@[\w\.-]+\.[\w]{2,3}$")
     },
-    addresses: [{
-        city: {
-            type: String
-        },
-        pincode: {
-            type: String,
-            match: new RegExp("^[0-9]{7}$")
-        }
-    }]
+    hash: String,
+    salt: String
+    
 }, {
     timestamps: true
 });
+
+userSchema.methods.setPassword = function(password){
+    this.salt = crypto.randomBytes(16).toString('hex');
+    this.hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64, 'sha512').toString('hex');
+  };
+  
+  userSchema.methods.validPassword = function(password) {
+    var hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64, 'sha512').toString('hex');
+    return this.hash === hash;
+  };
+  
+  userSchema.methods.generateJwt = function() {
+    var expiry = new Date();
+    expiry.setDate(expiry.getDate() + 7);
+  
+    return jwt.sign({
+      _id: this._id,
+      email: this.email,
+      name: this.name,
+      exp: parseInt(expiry.getTime() / 1000),
+    }, "MY_SECRET"); // DO NOT KEEP YOUR SECRET IN THE CODE!
+  };
 
 const User = mongoose.model('User',userSchema);
 
