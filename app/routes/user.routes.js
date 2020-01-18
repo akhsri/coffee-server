@@ -6,4 +6,13 @@ module.exports = app => {
 
   // Retrieve all Users
   app.get("/users", users.findAll);
+
+  // Retrieve a single User with userId
+  app.get("/users/:userId", users.findOne);
+
+  //Login
+  app.post("/users/login", users.login);
+
+  // Delete a user with userId
+  app.delete("/users/:userId", users.delete);
 };

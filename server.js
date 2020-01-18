@@ -1,47 +1,52 @@
-const express = require('express')
-var cors = require('cors');
+const express = require("express");
+var cors = require("cors");
 
-var bodyParser = require('body-parser');
+var bodyParser = require("body-parser");
 const app = express();
 const port = 3001;
-var morgan = require('morgan');
-
+var morgan = require("morgan");
+var passport = require("passport");
 
 // allow CORS
 app.use(cors());
 
-app.use(morgan('combined'));
-
+app.use(morgan("combined"));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
- 
+
 // parse application/json
 app.use(bodyParser.json());
 
 // Configuring the database
-const dbConfig = require('./config/database.config.js');
-const mongoose = require('mongoose');
+const dbConfig = require("./config/database.config.js");
+const mongoose = require("mongoose");
+
+require("./config/passport");
 
 mongoose.Promise = global.Promise;
 
 // Connecting to the database
-mongoose.connect(dbConfig.url, {    
+mongoose
+  .connect(dbConfig.url, {
     useNewUrlParser: true
-}).then(() => {
-    console.log("Successfully connected to the database");    
-}).catch(err => {
-    console.log('Could not connect to the database. Exiting now...', err);
+  })
+  .then(() => {
+    console.log("Successfully connected to the database");
+  })
+  .catch(err => {
+    console.log("Could not connect to the database. Exiting now...", err);
     process.exit();
-});
+  });
 
 // ........
+app.use(passport.initialize());
 
 // Require Beverages routes
-require('./app/routes/beverage.routes.js')(app);
+require("./app/routes/beverage.routes.js")(app);
 
 // Require Users routes
-require('./app/routes/user.routes.js')(app);
+require("./app/routes/user.routes.js")(app);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
@@ -68,11 +73,11 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 //     if (userRequested) {
 //         res.status(200).json({
 //             "user": userRequested
-//         });   
+//         });
 //     } else {
 //         res.status(404).json({
 //             "error": "User not found"
-//         }); 
+//         });
 //     }
 // });
 
@@ -84,7 +89,6 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 //     });
 // });
 
-
 // // To edit some previously created data  ->  when all properties of a resource is changes or accepted from client
 // app.put('/users/:id', (req, res) => {
 //     console.log(req.body);
@@ -93,7 +97,6 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 //     });
 // });
 
-
 // // To edit some previously created data  ->  when a single property of a resource is changes or accepted from client
 // app.patch('/', (req, res) => {
 //     console.log(req.body);
@@ -101,7 +104,6 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 //         "message": "User edited by patch"
 //     });
 // });
-
 
 // // To delete some previously created data
 // app.delete('/', (req, res) => {

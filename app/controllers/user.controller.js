@@ -17,7 +17,8 @@ module.exports.register = function(req, res) {
 
   var user = new User();
 
-  user.name = req.body.name;
+  user.firstName = req.body.firstName;
+  user.lastName = req.body.lastname;
   user.email = req.body.email;
 
   user.setPassword(req.body.password);
@@ -27,25 +28,68 @@ module.exports.register = function(req, res) {
     token = user.generateJwt();
     res.status(200);
     res.json({
-      token: token
+      token: token,
+      user: user
     });
   });
 };
 
+// Retrieve and return all users from the database.users
+exports.findAll = (req, res) => {
+  User.find()
+    .then(users => {
+      res.status(200).json(users);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving users."
+      });
+    });
+};
+
+// Find a single user with a userId
+exports.findOne = (req, res) => {
+  console.log(req.params);
+  User.findById(req.params.userId)
+    .then(user => {
+      if (!user) {
+        return res.status(404).send({
+          message: "User not found with id " + req.params.userId
+        });
+      }
+      res.send(user);
+    })
+    .catch(err => {
+      if (err.kind === "ObjectId") {
+        return res.status(404).send({
+          message: "User not found with id " + req.params.userId
+        });
+      }
+      return res.status(500).send({
+        message: "Error retrieving user with id " + req.params.userId
+      });
+    });
+};
+
 module.exports.login = function(req, res) {
-  // if(!req.body.email || !req.body.password) {
-  //   sendJSONresponse(res, 400, {
-  //     "message": "All fields required"
-  //   });
-  //   return;
-  // }
+  console.log("line 49");
+  if (!req.body.email || !req.body.password) {
+    sendJSONresponse(res, 400, {
+      message: "All fields required"
+    });
+    console.log(err);
+    return;
+  }
 
   passport.authenticate("local", function(err, user, info) {
     var token;
+    console.log(token);
 
     // If Passport throws/catches an error
+    //console.log("line 62");
     if (err) {
       res.status(404).json(err);
+      console.log(err);
       return;
     }
 
@@ -56,9 +100,35 @@ module.exports.login = function(req, res) {
       res.json({
         token: token
       });
+      //console.log("line 76");
     } else {
       // If user is not found
       res.status(401).json(info);
+      console.log(err);
+      //console.log("line 81");
     }
   })(req, res);
+};
+
+// Delete a user with the specified userId in the request
+exports.delete = (req, res) => {
+  User.findByIdAndRemove(req.params.userId)
+    .then(user => {
+      // if(!user) {
+      //     return res.status(404).send({
+      //         message: "User not found with id " + req.params.userId
+      //     });
+      // }
+      res.send({ message: "User deleted successfully!" });
+    })
+    .catch(err => {
+      if (err.kind === "ObjectId" || err.name === "NotFound") {
+        return res.status(404).send({
+          message: "User not found with id " + req.params.userId
+        });
+      }
+      return res.status(500).send({
+        message: "Could not delete user with id " + req.params.userId
+      });
+    });
 };
